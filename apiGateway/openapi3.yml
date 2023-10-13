@@ -1,0 +1,11 @@
+openapi: "3.0.1"
+info:
+  title: "Api_and_lambda_integration"
+  version: 1.0.0
+paths:
+  ${file(openapi_apis_conf/api_path_definition.yml)}
+components:
+  schemas:
+    Empty:
+      title: "Empty Schema"
+      type: "object"  

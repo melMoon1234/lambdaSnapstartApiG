@@ -1,0 +1,56 @@
+ 
+service: my-service
+
+plugins:
+  - serverless-pseudo-parameters
+  - serverless-iam-roles-per-function
+
+custom:
+  applicationFamily: my-application-family
+  application: lambda-snapstart-test2023  
+
+# Global provider information
+provider:
+  name: aws 
+  runtime: java17 
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}    
+  stackName: ${self:provider.stage}-${self:custom.application}
+  stackTags:
+    application-family: ${self:custom.applicationFamily}
+    application: ${self:custom.application}
+    environment: ${self:provider.stage}
+  deploymentBucket:
+    name: bucket-to-save--serverless-artifacts   
+
+# Deployment packaging configuration
+package:
+  individually: true
+
+functions:
+  lambdaFunction1:
+    name: ${self:provider.stage}-${self:custom.application}
+    handler: handler.LambdaHandler::handleRequest        
+    environment: ${file(environments.yml)}
+    package:
+      artifact: LambdaTest-1.2-SNAPSHOT.jar
+    memorySize: ${file(config/${self:provider.stage}.yml):lambdaFunctionConfigOne.memorySize}    
+    timeout: ${file(config/${self:provider.stage}.yml):lambdaFunctionConfigOne.timeout}    
+    iamRoleStatementsName: ${self:provider.stage}-${self:custom.application}-role # IAM role which will be used for this function
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          - logs:CreateLogGroup
+        Resource:
+          - "arn:#{AWS::Partition}:logs:#{AWS::Region}:#{AWS::AccountId}:log-group:/aws/lambda/${self:provider.stage}-${self:custom.application}:*"
+          
+resources:  
+  extensions:
+      LambdaFunction1LambdaFunction:
+        Properties:
+          SnapStart:
+            ApplyOn: PublishedVersions
+     
+

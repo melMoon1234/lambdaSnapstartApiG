@@ -1,0 +1,62 @@
+service: my-api-service
+
+plugins:  
+  - serverless-iam-roles-per-function  
+
+custom:
+  applicationFamily: my-app-family
+  application: test-snapstart
+  apiPublicName: ${self:custom.application}-api-gateway  
+
+provider:
+  name: aws
+  runtime: java17
+  stage: ${opt:stage, 'artifact'}
+  region: ${opt:region, 'us-east-1'}
+  stackName: ${self:provider.stage}-${self:custom.apiPublicName}  
+  versionFunctions: false  # Reduces total storage requirements, removes versioned output variable.
+  stackTags: 
+    application-family: ${self:custom.applicationFamily}
+    application: ${self:custom.application}
+    environment: ${self:provider.stage}
+  deploymentBucket:
+    name: bucket-to-save--serverless-artifacts
+
+resources:  
+  Resources:    
+    restApiPublic:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        ApiKeySourceType: HEADER
+        Body: ${file(openapi3.yml)}
+        Description: "The ${self:custom.apiPublicName} API."        
+        Name: ${self:provider.stage}-${self:custom.apiPublicName} 
+        Policy:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - 'execute-api:Invoke'
+              Resource:
+                - 'execute-api:/*'
+
+    apiDeploymentPublic:
+      Type: AWS::ApiGateway::Deployment
+      Properties:
+        RestApiId: !Ref restApiPublic
+        StageName: ${self:provider.stage}
+      DependsOn:
+        - restApiPublic  
+
+      
+    #Give the api permision to invoque the lambda
+    lambdaFunctionStackNameAuthOnePermission: 
+      Type: AWS::Lambda::Permission
+      Properties:
+        Action: lambda:invokeFunction
+        FunctionName: "arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:provider.stage}-lambda-snapstart-test2023:my_alias_name"
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Join ['', ['arn:aws:execute-api:${self:provider.region}:${aws:accountId}:',!Ref 'restApiPublic','/*/POST/v1/snapstart']]          
+      DependsOn:
+        - restApiPublic 

@@ -1,0 +1,4 @@
+lambdaFunctionConfigOne:
+  memorySize: 512
+  timeout: 900
+  logRootLevel: DEBUG

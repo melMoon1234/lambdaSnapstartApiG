@@ -1,0 +1,283 @@
+{
+  "service": {
+    "service": "my-api-service",
+    "serviceObject": {
+      "name": "my-api-service"
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "java17",
+      "stage": "dev",
+      "region": "us-east-1",
+      "stackName": "dev-test-snapstart-api-gateway",
+      "versionFunctions": false,
+      "stackTags": {
+        "application-family": "my-app-family",
+        "application": "test-snapstart",
+        "environment": "dev"
+      },
+      "deploymentBucket": "bucket-to-save--serverless-artifacts",
+      "deploymentBucketObject": {
+        "name": "bucket-to-save--serverless-artifacts"
+      },
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "restApiPublic": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "ApiKeySourceType": "HEADER",
+              "Body": {
+                "openapi": "3.0.1",
+                "info": {
+                  "title": "Api_and_lambda_integration",
+                  "version": "1.0.0"
+                },
+                "paths": {
+                  "/v1/snapstart": {
+                    "post": {
+                      "responses": {
+                        "200": {
+                          "description": "200 response",
+                          "content": {
+                            "application/json": {
+                              "schema": {
+                                "$ref": "#/components/schemas/Empty"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "x-amazon-apigateway-integration": {
+                        "httpMethod": "POST",
+                        "uri": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:${AWS::AccountId}:function:dev-lambda-snapstart-test2023:my_alias_name/invocations",
+                        "responses": {
+                          "default": {
+                            "statusCode": "200"
+                          }
+                        },
+                        "passthroughBehavior": "when_no_match",
+                        "contentHandling": "CONVERT_TO_TEXT",
+                        "type": "aws"
+                      }
+                    }
+                  }
+                },
+                "components": {
+                  "schemas": {
+                    "Empty": {
+                      "title": "Empty Schema",
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "Description": "The test-snapstart-api-gateway API.",
+              "Name": "dev-test-snapstart-api-gateway",
+              "Policy": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": [
+                      "execute-api:Invoke"
+                    ],
+                    "Resource": [
+                      "execute-api:/*"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "apiDeploymentPublic": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "restApiPublic"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "restApiPublic"
+            ]
+          },
+          "lambdaFunctionStackNameAuthOnePermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "Action": "lambda:invokeFunction",
+              "FunctionName": "arn:aws:lambda:us-east-1:561014219637:function:dev-lambda-snapstart-test2023:my_alias_name",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:us-east-1:561014219637:",
+                    {
+                      "Ref": "restApiPublic"
+                    },
+                    "/*/POST/v1/snapstart"
+                  ]
+                ]
+              }
+            },
+            "DependsOn": [
+              "restApiPublic"
+            ]
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "bucket-to-save--serverless-artifacts",
+            "Export": {
+              "Name": "sls-my-api-service-dev-ServerlessDeploymentBucketName"
+            }
+          }
+        }
+      }
+    },
+    "custom": {
+      "applicationFamily": "my-app-family",
+      "application": "test-snapstart",
+      "apiPublicName": "test-snapstart-api-gateway"
+    },
+    "plugins": [
+      "serverless-iam-roles-per-function"
+    ],
+    "pluginsData": {},
+    "functions": {},
+    "resources": {
+      "Resources": {
+        "restApiPublic": {
+          "Type": "AWS::ApiGateway::RestApi",
+          "Properties": {
+            "ApiKeySourceType": "HEADER",
+            "Body": {
+              "openapi": "3.0.1",
+              "info": {
+                "title": "Api_and_lambda_integration",
+                "version": "1.0.0"
+              },
+              "paths": {
+                "/v1/snapstart": {
+                  "post": {
+                    "responses": {
+                      "200": {
+                        "description": "200 response",
+                        "content": {
+                          "application/json": {
+                            "schema": {
+                              "$ref": "#/components/schemas/Empty"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "x-amazon-apigateway-integration": {
+                      "httpMethod": "POST",
+                      "uri": "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:${AWS::AccountId}:function:dev-lambda-snapstart-test2023:my_alias_name/invocations",
+                      "responses": {
+                        "default": {
+                          "statusCode": "200"
+                        }
+                      },
+                      "passthroughBehavior": "when_no_match",
+                      "contentHandling": "CONVERT_TO_TEXT",
+                      "type": "aws"
+                    }
+                  }
+                }
+              },
+              "components": {
+                "schemas": {
+                  "Empty": {
+                    "title": "Empty Schema",
+                    "type": "object"
+                  }
+                }
+              }
+            },
+            "Description": "The test-snapstart-api-gateway API.",
+            "Name": "dev-test-snapstart-api-gateway",
+            "Policy": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": [
+                    "execute-api:Invoke"
+                  ],
+                  "Resource": [
+                    "execute-api:/*"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "apiDeploymentPublic": {
+          "Type": "AWS::ApiGateway::Deployment",
+          "Properties": {
+            "RestApiId": {
+              "Ref": "restApiPublic"
+            },
+            "StageName": "dev"
+          },
+          "DependsOn": [
+            "restApiPublic"
+          ]
+        },
+        "lambdaFunctionStackNameAuthOnePermission": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "Action": "lambda:invokeFunction",
+            "FunctionName": "arn:aws:lambda:us-east-1:561014219637:function:dev-lambda-snapstart-test2023:my_alias_name",
+            "Principal": "apigateway.amazonaws.com",
+            "SourceArn": {
+              "Fn::Join": [
+                "",
+                [
+                  "arn:aws:execute-api:us-east-1:561014219637:",
+                  {
+                    "Ref": "restApiPublic"
+                  },
+                  "/*/POST/v1/snapstart"
+                ]
+              ]
+            }
+          },
+          "DependsOn": [
+            "restApiPublic"
+          ]
+        }
+      },
+      "Outputs": {}
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless.yml",
+    "initialServerlessConfig": {
+      "service": "my-api-service",
+      "plugins": {
+        "$ref": "$[\"service\"][\"plugins\"]"
+      },
+      "custom": {
+        "$ref": "$[\"service\"][\"custom\"]"
+      },
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "resources": {
+        "$ref": "$[\"service\"][\"resources\"]"
+      }
+    },
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": false
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/my-api-service/dev/1696956977036-2023-10-10T16:56:17.036Z",
+    "artifact": ""
+  }
+}

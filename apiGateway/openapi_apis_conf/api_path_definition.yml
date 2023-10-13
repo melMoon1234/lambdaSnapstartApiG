@@ -1,0 +1,2 @@
+/v1/snapstart:
+  ${file(openapi_apis_conf/v1/snapstart.yml)}
