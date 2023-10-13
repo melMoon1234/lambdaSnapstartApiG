@@ -52,5 +52,7 @@ resources:
         Properties:
           SnapStart:
             ApplyOn: PublishedVersions
+
+            
      
 
